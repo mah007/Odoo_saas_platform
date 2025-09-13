@@ -34,47 +34,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <div className="App">
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            
-            {/* Protected routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Layout>
-                  <DashboardPage />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/tenants" element={
-              <ProtectedRoute>
-                <Layout>
-                  <TenantsPage />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/billing" element={
-              <ProtectedRoute>
-                <Layout>
-                  <BillingPage />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/instances" element={
-              <ProtectedRoute>
-                <Layout>
-                  <InstancesPage />
-                </Layout>
-              </ProtectedRoute>
-            } />
-          </Routes>
-          
-          {/* Toast notifications */}
           <Toaster
             position="top-right"
             toastOptions={{
@@ -85,6 +44,20 @@ function App() {
               },
             }}
           />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            
+            {/* Protected routes */}
+            <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="instances" element={<InstancesPage />} />
+              <Route path="tenants" element={<TenantsPage />} />
+              <Route path="billing" element={<BillingPage />} />
+            </Route>
+          </Routes>
         </div>
       </Router>
     </QueryClientProvider>
