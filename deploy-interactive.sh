@@ -110,14 +110,6 @@ validate_email() {
     fi
 }
 
-# Check if running as root
-check_root() {
-    if [ "$EUID" -eq 0 ]; then
-        print_error "Please don't run this script as root. Use a regular user with sudo privileges."
-        exit 1
-    fi
-}
-
 # Check system requirements
 check_requirements() {
     print_step "Checking system requirements..."
@@ -782,9 +774,6 @@ display_final_info() {
 # Main execution
 main() {
     print_header "ODOO SAAS PLATFORM - INTERACTIVE DEPLOYMENT"
-    
-    # Check if running as root
-    check_root
     
     # Check system requirements
     check_requirements

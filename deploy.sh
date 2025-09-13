@@ -32,11 +32,6 @@ print_header() {
     echo -e "${BLUE}$1${NC}"
 }
 
-# Check if running as root or with sudo
-if [[ $EUID -eq 0 ]]; then
-    print_warning "Running as root. This is not recommended for production."
-fi
-
 # Get current directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
