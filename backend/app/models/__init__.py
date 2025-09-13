@@ -4,7 +4,10 @@ Models package initialization
 from .user import User
 from .tenant import Tenant, TenantStatus
 from .odoo_instance import OdooInstance, InstanceStatus
-from .billing import BillingRecord, BillingStatus
+from .billing import (
+    BillingRecord, SubscriptionPlan, Subscription, Payment, Invoice, Usage,
+    SubscriptionStatus, PaymentStatus
+)
 from .audit_log import AuditLog
 
 __all__ = [
@@ -14,7 +17,13 @@ __all__ = [
     "OdooInstance",
     "InstanceStatus",
     "BillingRecord",
-    "BillingStatus",
+    "SubscriptionPlan",
+    "Subscription",
+    "Payment",
+    "Invoice",
+    "Usage",
+    "SubscriptionStatus",
+    "PaymentStatus",
     "AuditLog"
 ]
 

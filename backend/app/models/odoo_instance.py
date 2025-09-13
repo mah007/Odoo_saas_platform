@@ -55,7 +55,7 @@ class OdooInstance(Base):
     stopped_at = Column(DateTime(timezone=True), nullable=True)
     
     # Relationships
-    tenant = relationship("Tenant", back_populates="odoo_instance")
+    tenant = relationship("Tenant", back_populates="instances")
     
     def __repr__(self):
         return f"<OdooInstance(container_name='{self.container_name}', status='{self.status}')>"

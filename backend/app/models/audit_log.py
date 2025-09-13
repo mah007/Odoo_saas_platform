@@ -23,7 +23,7 @@ class AuditLog(Base):
     user_agent = Column(Text, nullable=True)
     
     # Additional data
-    metadata = Column(JSON, nullable=True)
+    details = Column(JSON, nullable=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())

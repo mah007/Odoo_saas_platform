@@ -11,10 +11,10 @@ import logging
 import os
 
 from app.core.config import settings
-# from app.core.database import init_db
-# from app.api.v1 import auth, admin, tenants, billing, odoo_instances
-# from app.core.security import get_current_user
-# from app.models.user import User
+from app.core.database import init_db
+from app.api.v1 import auth, admin, tenants, billing, odoo_instances, monitoring, security, backup
+from app.core.security import get_current_user
+from app.models.user import User
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,8 +24,8 @@ async def lifespan(app: FastAPI):
     """Application lifespan events"""
     logger.info("🚀 Starting Odoo SaaS Platform...")
     
-    # Initialize database - commented out for now
-    # await init_db()
+    # Initialize database
+    await init_db()
     logger.info("✅ Application started")
     
     yield
@@ -89,12 +89,15 @@ async def admin_dashboard():
         "redirect": "/admin.html"
     }
 
-# Include API routers - commented out until fully implemented
-# app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
-# app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
-# app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["Tenants"])
-# app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
-# app.include_router(odoo_instances.router, prefix="/api/v1/odoo", tags=["Odoo Instances"])
+# Include API routers
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["Tenants"])
+app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
+app.include_router(odoo_instances.router, prefix="/api/v1/odoo", tags=["Odoo Instances"])
+app.include_router(monitoring.router, prefix="/api/v1/monitoring", tags=["Monitoring"])
+app.include_router(security.router, prefix="/api/v1/security", tags=["Security"])
+app.include_router(backup.router, prefix="/api/v1/backup", tags=["Backup"])
 
 # Temporary API endpoints for testing
 @app.get("/api/v1/admin/stats")

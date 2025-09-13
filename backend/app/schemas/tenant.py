@@ -1,31 +1,47 @@
 """
 Tenant schemas for request/response validation
 """
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
-import re
+from decimal import Decimal
 
 class TenantCreate(BaseModel):
-    name: str
-    subdomain: str
-    
-    @validator('subdomain')
-    def validate_subdomain(cls, v):
-        if not re.match(r'^[a-z0-9-]+$', v):
-            raise ValueError('Subdomain must contain only lowercase letters, numbers, and hyphens')
-        if len(v) < 3 or len(v) > 20:
-            raise ValueError('Subdomain must be between 3 and 20 characters')
-        return v
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
+    max_instances: Optional[int] = Field(default=1, ge=1)
+    storage_limit_gb: Optional[int] = Field(default=10, ge=1)
+
+class TenantUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    max_instances: Optional[int] = Field(None, ge=1)
+    storage_limit_gb: Optional[int] = Field(None, ge=1)
 
 class TenantResponse(BaseModel):
     id: int
     name: str
-    subdomain: str
+    description: Optional[str]
+    owner_id: int
     status: str
-    full_domain: str
+    is_active: bool
+    max_instances: int
+    max_users: int
+    storage_limit_gb: int
+    storage_used_gb: Decimal
+    last_activity: Optional[datetime]
     created_at: datetime
+    updated_at: Optional[datetime]
     
     class Config:
         from_attributes = True
+
+class TenantStats(BaseModel):
+    total_instances: int
+    running_instances: int
+    stopped_instances: int
+    error_instances: int
+    storage_used_gb: Decimal
+    storage_limit_gb: int
+    max_instances: int
 
