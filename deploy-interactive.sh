@@ -614,57 +614,110 @@ EOF
 
 # Setup SSL certificates
 setup_ssl() {
-    print_step "Setting up SSL certificates..."
+    print_step "Setting up SSL certificates with containerized approach..."
     
-    # Create directories
-    sudo mkdir -p /etc/letsencrypt/live/$DOMAIN
-    sudo mkdir -p /var/www/certbot
+    # Stop and disable host nginx if running to prevent conflicts
+    print_status "Ensuring host nginx is not running to prevent conflicts..."
+    if systemctl is-active --quiet nginx; then
+        sudo systemctl stop nginx
+        sudo systemctl disable nginx
+        print_status "Host nginx stopped and disabled"
+    fi
     
-    # Start nginx temporarily for certificate validation
-    print_status "Starting temporary nginx for certificate validation..."
+    # Create directories for certificates
+    mkdir -p certbot/conf
+    mkdir -p certbot/www
+    mkdir -p scripts
+    
+    print_status "Creating temporary nginx configuration for certificate validation..."
     
     # Create temporary nginx config for certificate validation
-    sudo tee /etc/nginx/sites-available/temp-ssl << EOF
-server {
-    listen 80;
-    server_name $DOMAIN $API_DOMAIN $ADMIN_DOMAIN;
-    
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
-    
-    location / {
-        return 200 'OK';
-        add_header Content-Type text/plain;
+    cat > nginx/nginx-temp.conf << EOF
+events {
+    worker_connections 1024;
+}
+
+http {
+    server {
+        listen 80;
+        server_name $DOMAIN $API_DOMAIN $ADMIN_DOMAIN;
+        
+        location /.well-known/acme-challenge/ {
+            root /var/www/certbot;
+        }
+        
+        location / {
+            return 200 'Certificate validation server';
+            add_header Content-Type text/plain;
+        }
     }
 }
 EOF
     
-    # Enable temporary config
-    sudo ln -sf /etc/nginx/sites-available/temp-ssl /etc/nginx/sites-enabled/
-    sudo nginx -t && sudo systemctl reload nginx
+    # Start temporary nginx container for certificate validation
+    print_status "Starting temporary nginx container for certificate validation..."
+    docker run -d \
+        --name temp-nginx-ssl \
+        -p 80:80 \
+        -v $(pwd)/nginx/nginx-temp.conf:/etc/nginx/nginx.conf:ro \
+        -v $(pwd)/certbot/www:/var/www/certbot:ro \
+        nginx:alpine
     
-    # Get SSL certificates
+    # Wait for nginx to start
+    sleep 5
+    
+    # Get SSL certificates using certbot container
     print_status "Obtaining SSL certificates from Let's Encrypt..."
-    sudo certbot certonly \
+    docker run --rm \
+        -v $(pwd)/certbot/conf:/etc/letsencrypt \
+        -v $(pwd)/certbot/www:/var/www/certbot \
+        certbot/certbot certonly \
         --webroot \
         --webroot-path=/var/www/certbot \
         --email $SSL_EMAIL \
         --agree-tos \
         --no-eff-email \
+        --force-renewal \
         -d $DOMAIN \
         -d $API_DOMAIN \
         -d $ADMIN_DOMAIN
     
+    # Stop and remove temporary nginx
+    print_status "Cleaning up temporary containers..."
+    docker stop temp-nginx-ssl
+    docker rm temp-nginx-ssl
+    
     # Remove temporary config
-    sudo rm -f /etc/nginx/sites-enabled/temp-ssl
-    sudo rm -f /etc/nginx/sites-available/temp-ssl
+    rm -f nginx/nginx-temp.conf
     
-    # Setup auto-renewal
+    # Setup auto-renewal with docker
     print_status "Setting up automatic certificate renewal..."
-    (crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/certbot renew --quiet --deploy-hook 'docker-compose -f $(pwd)/docker-compose.yml restart nginx'") | crontab -
     
-    print_status "SSL certificates configured successfully"
+    # Create renewal script
+    cat > scripts/renew-ssl.sh << 'EOF'
+#!/bin/bash
+# SSL Certificate Renewal Script
+
+cd "$(dirname "$0")/.."
+
+# Renew certificates
+docker run --rm \
+    -v $(pwd)/certbot/conf:/etc/letsencrypt \
+    -v $(pwd)/certbot/www:/var/www/certbot \
+    certbot/certbot renew --quiet
+
+# Reload nginx if certificates were renewed
+if [ $? -eq 0 ]; then
+    docker-compose restart nginx
+fi
+EOF
+    
+    chmod +x scripts/renew-ssl.sh
+    
+    # Add to crontab for automatic renewal
+    (crontab -l 2>/dev/null; echo "0 12 * * * $(pwd)/scripts/renew-ssl.sh") | crontab -
+    
+    print_status "SSL certificates configured successfully with containerized approach"
 }
 
 # Configure firewall
