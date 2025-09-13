@@ -52,7 +52,7 @@ import {
   Memory,
   Speed,
 } from '@mui/icons-material';
-import { adminAPI } from '../dataProvider';
+import { adminAPI } from '../../dataProvider';
 
 // Custom field components
 const InstanceAvatar = () => {
@@ -311,13 +311,16 @@ export const InstanceList = () => (
 );
 
 // Instance Show Component
-export const InstanceShow = () => (
-  <Show>
-    <SimpleShowLayout>
-      <Box display="flex" flexDirection="column" gap={3} width="100%">
-        <Box display="flex" alignItems="center" gap={2}>
-          <InstanceAvatar />
-          <Box>
+export const InstanceShow = () => {
+  const record = useRecordContext();
+  
+  return (
+    <Show>
+      <SimpleShowLayout>
+        <Box display="flex" flexDirection="column" gap={3} width="100%">
+          <Box display="flex" alignItems="center" gap={2}>
+            <InstanceAvatar />
+            <Box>
             <Typography variant="h5">
               <TextField source="container_name" />
             </Typography>
@@ -374,5 +377,6 @@ export const InstanceShow = () => (
       </Box>
     </SimpleShowLayout>
   </Show>
-);
+  );
+};
 

@@ -55,7 +55,7 @@ import {
   Computer,
   AttachMoney,
 } from '@mui/icons-material';
-import { adminAPI } from '../dataProvider';
+import { adminAPI } from '../../dataProvider';
 
 // Custom field components
 const TenantAvatar = () => {
